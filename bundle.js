@@ -5,9 +5,6 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const distDir = path.join(__dirname, 'dist')
 
-const htmlPath = path.join(distDir, 'index.html')
-const html = fs.readFileSync(htmlPath, 'utf8')
-
 const assetsDir = path.join(distDir, 'assets')
 const files = fs.readdirSync(assetsDir)
 
@@ -22,16 +19,28 @@ if (!cssFile || !jsFile) {
 const css = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8')
 const js = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8')
 
-// Crucial: Use function replacers so special patterns like $& in minified JS are NOT evaluated
-let bundled = html
-bundled = bundled.replace(
-  /<link rel="stylesheet"[^>]+>/,
-  () => `<style>\n${css}\n</style>`
-)
-bundled = bundled.replace(
-  /<script type="module"[^>]+><\/script>/,
-  () => `<script type="module">\n${js}\n</script>`
-)
+// Cleanly construct single-file HTML without regex/replace ambiguities
+const outputHtml = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DiabPredict — Know Your Diabetes Risk</title>
+    <meta name="description" content="A premium AI-powered diabetes risk assessment platform. Private, instant, and built for you." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+${css}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+${js}
+    </script>
+  </body>
+</html>`
 
-fs.writeFileSync(path.join(distDir, 'index_bundle.html'), bundled, 'utf8')
-console.log('Successfully generated clean bundle at dist/index_bundle.html (' + bundled.length + ' bytes)')
+fs.writeFileSync(path.join(distDir, 'index_bundle.html'), outputHtml, 'utf8')
+console.log('Successfully generated clean bundle at dist/index_bundle.html (' + outputHtml.length + ' bytes)')
