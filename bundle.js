@@ -22,15 +22,16 @@ if (!cssFile || !jsFile) {
 const css = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8')
 const js = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8')
 
+// Crucial: Use function replacers so special patterns like $& in minified JS are NOT evaluated
 let bundled = html
 bundled = bundled.replace(
   /<link rel="stylesheet"[^>]+>/,
-  `<style>\n${css}\n</style>`
+  () => `<style>\n${css}\n</style>`
 )
 bundled = bundled.replace(
   /<script type="module"[^>]+><\/script>/,
-  `<script type="module">\n${js}\n</script>`
+  () => `<script type="module">\n${js}\n</script>`
 )
 
 fs.writeFileSync(path.join(distDir, 'index_bundle.html'), bundled, 'utf8')
-console.log('Successfully generated self-contained bundle at dist/index_bundle.html (' + bundled.length + ' bytes)')
+console.log('Successfully generated clean bundle at dist/index_bundle.html (' + bundled.length + ' bytes)')
